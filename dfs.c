@@ -21,7 +21,7 @@ int main()
     FILE *fpointer;
     char buf[1000];
 
-    int start_vertex = 1;
+    int start_vertex = 2;
 
     fpointer = fopen("G4.txt", "r");
 

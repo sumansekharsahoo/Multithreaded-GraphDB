@@ -16,12 +16,14 @@
 
 int main()
 {
+    // just file reading. Same as BFS
+
     FILE *fpointer;
-    char buf[100];
+    char buf[1000];
 
     int start_vertex = 1;
 
-    fpointer = fopen("G3.txt", "r");
+    fpointer = fopen("G4.txt", "r");
 
     if (fpointer == NULL)
     {
@@ -45,15 +47,7 @@ int main()
     }
     fclose(fpointer);
 
-    // for (int i = 0; i < no_of_vertices; i++)
-    // {
-    //     for (int j = 0; j < no_of_vertices; j++)
-    //     {
-    //         printf("%d", adj_matrix[i][j]);
-    //         printf(" ");
-    //     }
-    //     printf("\n");
-    // }
+    // Actual dfs starts here
 
     bool visited[no_of_vertices];
     for (int i = 0; i < no_of_vertices; i++)
@@ -61,30 +55,37 @@ int main()
         visited[i] = false;
     }
 
-    int queue[no_of_vertices];
-    queue[0] = start_vertex - 1;
-    int front = 0;
-    int back = 0;
-
+    int stack[10000];
+    stack[0] = start_vertex - 1;
     int ans[no_of_vertices];
-    visited[start_vertex - 1] = true;
 
-    while (front != no_of_vertices)
+    int top = 1;
+    int counter = 0;
+
+    while (top != 0)
     {
-        int node = queue[front];
-        ans[front] = node + 1;
-        for (int i = 0; i < no_of_vertices; i++)
+        if (visited[stack[top - 1]] == true)
         {
-            if (adj_matrix[node][i] == 1 && !visited[i])
+            top--;
+        }
+        else
+        {
+            int node = stack[top - 1];
+            // printf("%d\n", node);
+            top--;
+            ans[counter] = node + 1;
+            counter++;
+            visited[node] = true;
+            for (int i = 0; i < no_of_vertices; i++)
             {
-                back++;
-                queue[back] = i;
-                visited[i] = true;
+                if (adj_matrix[node][i] == 1 && !visited[i])
+                {
+                    stack[top] = i;
+                    top++;
+                }
             }
         }
-        front++;
     }
-
     for (int i = 0; i < no_of_vertices; i++)
     {
         printf("%d ", ans[i]);

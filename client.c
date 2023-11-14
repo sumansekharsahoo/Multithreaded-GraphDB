@@ -10,36 +10,31 @@
 #define MAX_GRAPH_SIZE 256
 
 // Define the message format
-typedef struct Request_t {
-    int sequence_number;
+typedef struct Request {
+    long sequence_number;
     int operation_number;
-    char graph_file[100]; //Num nodes @ FileName
-     // For write operations
-    // Add other fields as needed
+    char graph_file_name[100];
+    // int num_nodes;  // For write operations
+    // // Add other fields as needed
 }Request;
+typedef struct Result_t {
+    long mtype;
+    char mtext[100];
+}Result;
 
 
-
-// Message Queue key and ID
-#define MSG_KEY 1234
 int msgid;
-// Shared Memory key and ID
-#define SHM_KEY 1234
 int shmid;
-
-
-
-
 
 int main() {
     Request request;
-    
+    Result result;
     key_t keyq,keysm;
     
-    char diff='@';
+    
     
     //Creating message queue
-    if ((keyq = ftok("load_balancer.c", 1000)) == -1)
+    if ((keyq = ftok("LoadBalancer.c", 1000)) == -1)
     {
         perror("ftok");
         exit(1);
@@ -52,13 +47,24 @@ int main() {
         exit(1);
     }
     
-    if ((keysm = ftok("load_balancer.c", request.sequence_number)) == -1)
+    
+	// Input sequence number
+    printf("Enter Sequence Number: ");
+    scanf("%ld", &request.sequence_number);
+
+    // Input operation number
+    printf("Enter Operation Number: ");
+    scanf("%d", &request.operation_number);
+
+    // Input graph file name
+    printf("Enter Graph File Name: ");
+    scanf("%s", request.graph_file_name);
+
+	if ((keysm = ftok("LoadBalancer.c", request.sequence_number)) == -1)
     {
         perror("ftok");
         exit(1);
     }
-
-
     // Create or get the shared memory
     shmid = shmget(keysm, MAX_GRAPH_SIZE * MAX_GRAPH_SIZE * sizeof(int), 0666 | IPC_CREAT);
     if (shmid == -1) {
@@ -73,21 +79,9 @@ int main() {
         exit(1);
     }
 
-    // Input sequence number
-    printf("Enter Sequence Number: ");
-    scanf("%d", &request.sequence_number);
-   
+    
 
-    // Input operation number
-    printf("Enter Operation Number: ");
-    scanf("%d", &request.operation_number);
-
-    // Input graph file name
-    printf("Enter Graph File Name: ");
-    scanf("%s", request.graph_file);
-
-
-    if (request.operation_number == 1) {
+if (request.operation_number == 1) {
         // For write operations (option 1)
         int num_nodes;
         char temp[100];
@@ -95,14 +89,16 @@ int main() {
         scanf("%d",&num_nodes);
         
         // code block which changes the graph_file accordingly
-        sprintf(temp, "%d", num_nodes);  
-        strncat(temp,&diff,1);
-        strcat(temp,request.graph_file);
-        strcpy(request.graph_file,temp);
+        //sprintf(temp, "%d", num_nodes);  
+        //strncat(temp,&diff,1);
+        //strcat(temp,request.graph_file);
+        //strcpy(request.graph_file,temp);
         
        
 
         // Store the adjacency matrix data in the shared memory segment.
+        *shared_memory = num_nodes;
+        shared_memory++;
         for (int i = 0; i < num_nodes; i++) {
             for (int j = 0; j < num_nodes; j++) {
                 printf("Enter adjacency matrix element at row %d, column %d: ", i, j);
@@ -113,7 +109,29 @@ int main() {
     }
      else if (request.operation_number == 2) {
         // For other write operations, add or delete nodes/edges
-        // Additional logic to input and validate the changes
+       
+        int num_nodes;
+        char temp[100];
+        printf("Enter number of nodes of the graph: ");
+        scanf("%d",&num_nodes);
+        
+        // code block which changes the graph_file accordingly
+        //sprintf(temp, "%d", num_nodes);  
+        //strncat(temp,&diff,1);
+        //strcat(temp,request.graph_file);
+        //strcpy(request.graph_file,temp);
+        
+       
+
+        // Store the adjacency matrix data in the shared memory segment.
+        *shared_memory = num_nodes;
+        shared_memory++;
+        for (int i = 0; i < num_nodes; i++) {
+            for (int j = 0; j < num_nodes; j++) {
+                printf("Enter adjacency matrix element at row %d, column %d: ", i, j);
+                scanf("%d", &shared_memory[i * num_nodes + j]);
+            }
+        }
     }
      else if (request.operation_number == 3 || request.operation_number == 4) {
         // For read operations (options 3 and 4)
@@ -126,23 +144,23 @@ int main() {
     }
 
     // Send the request to the load balancer
-        if (msgsnd(msgid, &request, sizeof(Request), 0) == -1) {
+        if (msgsnd(msgid, &request, sizeof(struct Request), 0) == -1) {
         fprintf(stderr,"msgsnd");
         exit(1);
         }
 
     // Recive from the sever ...
 
-        printf("hi");
-        if(msgrcv(msgid,&request,sizeof(request),request.sequence_number+100,0)==-1){
+        if(msgrcv(msgid,&result,sizeof(result),request.sequence_number+300,0)==-1){
             fprintf(stderr,"\nError in msgrcv");
             exit(1);
         }
-        printf("%s",request.graph_file);
+        printf("\n%s",result.mtext);
         fflush(stdout);
-        request.sequence_number -=100;
+        
     // Detach the shared memory from the process
     shmdt(shared_memory);
 
     return 0;
 }
+

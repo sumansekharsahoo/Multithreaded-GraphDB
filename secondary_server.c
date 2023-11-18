@@ -13,6 +13,7 @@
 #define MAX_VERTICES 1000
 #define MAX_GRAPH_SIZE 256
 int msgid;
+int *shared_memory_lock;
 
 typedef struct LBRequest_t
 {
@@ -83,6 +84,26 @@ char pop(Stack *s);
 void *dfs(void *arg);
 void *add(void *arg);
 
+int getFileNumber(char *c)
+{
+    int n = strlen(c);
+    if (n == 6)
+    {
+        return (int)c[1] - '0';
+    }
+    else if (n == 7)
+    {
+        if (c[1] == '2')
+        {
+            return 20;
+        }
+        else
+        {
+            return 10 + (int)c[2] - '0';
+        }
+    }
+}
+
 int getStartingIndex(LBRequest);
 char **getAdjMatrix(LBRequest);
 int getNum(LBRequest);
@@ -123,8 +144,6 @@ void *operation4(void *argument)
 
 void *operation3(void *argument)
 {
-    printf("DFS Function");
-    fflush(stdout);
 
     LBRequest lbRequest = *((LBRequest *)argument);
 
@@ -186,11 +205,18 @@ void *operation3(void *argument)
 int main()
 {
 
-    key_t keyq;
+    key_t keyq, keysm2;
     pthread_t threads[100];
     int i = 0;
+    int lockid = 0;
 
     if ((keyq = ftok("LoadBalancer.c", 1000)) == -1)
+    {
+        perror("ftok");
+        exit(1);
+    }
+
+    if ((keysm2 = ftok("LoadBalancer.c", 101)) == -1)
     {
         perror("ftok");
         exit(1);
@@ -201,6 +227,21 @@ int main()
     if (msgid == -1)
     {
         perror("msgget");
+        exit(1);
+    }
+
+    lockid = shmget(keysm2, 20 * sizeof(int), 0666);
+    if (lockid == -1)
+    {
+        perror("shmget");
+        exit(1);
+    }
+
+    // Attach shared memory to the process
+    int *shared_memory_lock = shmat(lockid, NULL, 0);
+    if (shared_memory_lock == (int *)-1)
+    {
+        perror("shmat");
         exit(1);
     }
 
@@ -242,6 +283,9 @@ int main()
             }
             break;
         }
+
+        while (shared_memory_lock[getFileNumber(lbRequest.graph_file_name) - 1] == 0)
+            ;
 
         if (lbRequest.operation_number == 3)
         {

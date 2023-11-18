@@ -36,7 +36,7 @@ int main()
     Request request;
     LBRequest lbRequest;
     int num_nodes;
-    key_t keyq;
+    key_t keyq, keysm;
     // msgid = msgget(MSG_KEY, 0666 | IPC_CREAT);
     // if (msgid == -1) {
     //   fprintf(stderr,"msgget");
@@ -57,6 +57,31 @@ int main()
         exit(1);
     }
 
+    // semophore shm
+    if ((keysm = ftok("LoadBalancer.c", 101)) == -1)
+    {
+        perror("ftok");
+        exit(1);
+    }
+    // Create or get the shared memory
+    shmid = shmget(keysm, 20 * sizeof(int), 0666 | IPC_CREAT);
+    if (shmid == -1)
+    {
+        perror("shmget");
+        exit(1);
+    }
+
+    // Attach shared memory to the process
+    int *shared_memory = shmat(shmid, NULL, 0);
+    if (shared_memory == (int *)-1)
+    {
+        perror("shmat");
+        exit(1);
+    }
+    for (int i = 0; i < 20; i++)
+    {
+        shared_memory[i] = 1;
+    }
     // shmid = shmget(SHM_KEY, MAX_GRAPH_SIZE * MAX_GRAPH_SIZE * sizeof(int), 0666);
     // if (shmid == -1) {
     //    perror("shmget");
@@ -151,6 +176,6 @@ int main()
         perror("msgctl");
         exit(1);
     }
-
+    shmdt(shared_memory);
     return 0;
 }

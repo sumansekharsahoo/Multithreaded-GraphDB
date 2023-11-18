@@ -28,6 +28,40 @@ typedef struct Result_t
 
 int msgid;
 
+int *shared_memory_lock;
+int getFileNumber(char *c)
+{
+    int n = strlen(c);
+    if (n == 6)
+    {
+        return (int)c[1] - '0';
+    }
+    else if (n == 7)
+    {
+        if (c[1] == '2')
+        {
+            return 20;
+        }
+        else
+        {
+            return 10 + (int)c[2] - '0';
+        }
+    }
+}
+void Semaphore_lock(int n)
+{
+    // for(int i = 0 ; i < 20 ; i ++)
+    // printf("%d",shared_memory_lock[i]);
+    while (shared_memory_lock[n - 1] == 0)
+        ;
+
+    shared_memory_lock[n - 1]--;
+}
+void Semaphore_unlock(int n)
+{
+
+    shared_memory_lock[n - 1]++;
+}
 // function for handing task of primary server
 void *primaryServer(void *argument)
 {
@@ -92,10 +126,10 @@ void *primaryServer(void *argument)
         fprintf(fptr, "\n");
     }
     // Close the file
-    printf("victory");
+    // printf("victory");
     fclose(fptr);
-    fflush(stdout);
-    printf("victory");
+    // fflush(stdout);
+    // printf("victory");
     // request.sequence_number+=100;
     result.mtype = lbRequest.sequence_number + 300;
     strcpy(result.mtext, "File Created/Edited !");
@@ -108,12 +142,14 @@ void *primaryServer(void *argument)
         fprintf(stderr, "\nError in msgsnd");
         exit(1);
     }
+    Semaphore_unlock(getFileNumber(lbRequest.graph_file_name));
 }
 
 int main()
 {
 
-    key_t keyq;
+    int lock;
+    key_t keyq, keysm1;
     pthread_t threads[100];
     int i = 0;
     // msgid = msgget(MSG_KEY, 0666);
@@ -136,6 +172,27 @@ int main()
         exit(1);
     }
 
+    // semophore shm
+    if ((keysm1 = ftok("LoadBalancer.c", 101)) == -1)
+    {
+        perror("ftok");
+        exit(1);
+    }
+    // Create or get the shared memory
+    lock = shmget(keysm1, 20 * sizeof(int), 0666);
+    if (lock == -1)
+    {
+        perror("shmget");
+        exit(1);
+    }
+
+    // Attach shared memory to the process
+    shared_memory_lock = shmat(lock, NULL, 0);
+    if (shared_memory_lock == (int *)-1)
+    {
+        perror("shmat");
+        exit(1);
+    }
     // shmid = shmget(SHM_KEY, MAX_GRAPH_SIZE * MAX_GRAPH_SIZE * sizeof(int), 0666);
     // if (shmid == -1) {
     //   perror("shmget");
@@ -159,6 +216,10 @@ int main()
             printf("Terminating !!\n");
             break;
         }
+
+        Semaphore_lock(getFileNumber(lbRequest.graph_file_name));
+        // printf("%d",getFileNumber(lbRequest.graph_file_name));
+        // fflush(stdout);
         if (pthread_create(&threads[i], NULL, primaryServer, (void *)&lbRequest) != 0)
         {
             fprintf(stderr, "Error creating thread \n");

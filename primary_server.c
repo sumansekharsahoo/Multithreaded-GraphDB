@@ -50,8 +50,7 @@ int getFileNumber(char *c)
 }
 void Semaphore_lock(int n)
 {
-    // for(int i = 0 ; i < 20 ; i ++)
-    // printf("%d",shared_memory_lock[i]);
+
     while (shared_memory_lock[n - 1] == 0)
         ;
 
@@ -90,11 +89,6 @@ void *primaryServer(void *argument)
         perror("shmat");
         exit(1);
     }
-    // printf("\n%ld",lbRequest.sequence_number);
-    // printf("\n%s",lbRequest.graph_file_name);
-
-    // printf("\nGet ready for the shared memeory content: ");
-    // printf("\nNumber of nodes is : %d",shared_memory[0]);
 
     FILE *fptr;
 
@@ -103,12 +97,9 @@ void *primaryServer(void *argument)
     fptr = fopen(lbRequest.graph_file_name, "w");
 
     // Write some text to the file
-    // fprintf(fptr, "Some text");
 
     char temp[100];
     int n = shared_memory[0];
-    // sprintf(temp, "%s", n);
-    // strcat(temp,"\n");
 
     sprintf(temp, "%d", n);
     fprintf(fptr, "%s", temp);
@@ -126,15 +117,11 @@ void *primaryServer(void *argument)
         fprintf(fptr, "\n");
     }
     // Close the file
-    // printf("victory");
+
     fclose(fptr);
-    // fflush(stdout);
-    // printf("victory");
-    // request.sequence_number+=100;
+
     result.mtype = lbRequest.sequence_number + 300;
     strcpy(result.mtext, "File Created/Edited !");
-    // printf("%s",request.graph_file_name);
-    // printf("\nmtype modified to %ld ",request.sequence_number);
 
     // Send the message to the message queue.
     if (msgsnd(msgid, &result, sizeof(result), 0) == -1)
@@ -152,11 +139,7 @@ int main()
     key_t keyq, keysm1;
     pthread_t threads[100];
     int i = 0;
-    // msgid = msgget(MSG_KEY, 0666);
-    // if (msgid == -1) {
-    //   fprintf(stderr,"msgget");
-    // exit(1);
-    //}
+
     // Creating message queue
     if ((keyq = ftok("LoadBalancer.c", 1000)) == -1)
     {
@@ -193,16 +176,11 @@ int main()
         perror("shmat");
         exit(1);
     }
-    // shmid = shmget(SHM_KEY, MAX_GRAPH_SIZE * MAX_GRAPH_SIZE * sizeof(int), 0666);
-    // if (shmid == -1) {
-    //   perror("shmget");
-    // exit(1);
-    //}
 
     while (true)
     {
 
-        printf("Primary server is Listening: ");
+        printf("Primary server is Listening: \n");
         fflush(stdout);
         LBRequest lbRequest;
         if (msgrcv(msgid, &lbRequest, sizeof(lbRequest), 201, 0) == -1)
@@ -218,7 +196,7 @@ int main()
         }
 
         Semaphore_lock(getFileNumber(lbRequest.graph_file_name));
-        // printf("%d",getFileNumber(lbRequest.graph_file_name));
+
         // fflush(stdout);
         if (pthread_create(&threads[i], NULL, primaryServer, (void *)&lbRequest) != 0)
         {

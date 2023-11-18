@@ -37,11 +37,7 @@ int main()
     LBRequest lbRequest;
     int num_nodes;
     key_t keyq, keysm;
-    // msgid = msgget(MSG_KEY, 0666 | IPC_CREAT);
-    // if (msgid == -1) {
-    //   fprintf(stderr,"msgget");
-    // exit(1);
-    //}
+
     // Creating message queue
     if ((keyq = ftok("LoadBalancer.c", 1000)) == -1)
     {
@@ -82,22 +78,10 @@ int main()
     {
         shared_memory[i] = 1;
     }
-    // shmid = shmget(SHM_KEY, MAX_GRAPH_SIZE * MAX_GRAPH_SIZE * sizeof(int), 0666);
-    // if (shmid == -1) {
-    //    perror("shmget");
-    //  exit(1);
-    //}
-
-    // Attach shared memory to the process
-    // int *shared_memory = shmat(shmid, NULL, 0);
-    // if (shared_memory == (int *)-1) {
-    //  perror("shmat");
-    // exit(1);
-    //}
 
     while (1)
     {
-        printf("Load Balancer is Listening: ");
+        printf("Load Balancer is Listening: \n");
         fflush(stdout);
         if (msgrcv(msgid, &request, sizeof(request), -101, 0) == -1)
         {

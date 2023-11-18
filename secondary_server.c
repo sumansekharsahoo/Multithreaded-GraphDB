@@ -130,10 +130,7 @@ void *operation4(void *argument)
     Result result;
     result.mtype = lbRequest.sequence_number + 300;
     strcpy(result.mtext, queue->ans);
-    // printf("%s",request.graph_file_name);
-    // printf("\nmtype modified to %ld ",request.sequence_number);
-    // printf("mytpe : %s", result.mtext);
-    // fflush(stdout);
+
     // Send the message to the message queue.
     if (msgsnd(msgid, &result, sizeof(result), 0) == -1)
     {
@@ -156,20 +153,14 @@ void *operation3(void *argument)
     stack = (Stack *)malloc(sizeof(Stack));
 
     s_initializer(stack, start_vertex, no_of_vertices, adj_matrix);
-    // printf(" ");
-    // fflush(stdout);
-    // printf("I am here");
-    // fflush(stdout);
+
     push(stack->start_vertex, stack);
-    // printf("I am here");
-    // fflush(stdout);
+
     stack->visited[(int)(*(stack->cur_vertex) - '0') - 1] = true;
     pthread_mutex_lock(&threadLock);
-    // printf("I am here");
-    // fflush(stdout);
+
     pthread_create(&stack->thread[stack->arr_ptr], NULL, dfs, (void *)stack);
-    // printf("I am here");
-    // fflush(stdout);
+
     while (true)
     {
         if (stack->arr_ptr == no_of_vertices)
@@ -178,23 +169,18 @@ void *operation3(void *argument)
 
     for (int i = 0; i <= stack->arr_ptr - 1; i++)
     {
-        // printf("I am here");fflush(stdout);
         pthread_join(stack->thread[i], NULL);
     }
 
-    // char *seq = (char *)stack->ans;
     stack->ans[stack->ans_ptr] = '\0';
-    // printf("ans  is : %s",stack->ans);
-    // fflush(stdout);
 
     Result result;
     result.mtype = lbRequest.sequence_number + 300;
     strcpy(result.mtext, stack->ans);
-    // printf("%s",request.graph_file_name);
-    // printf("\nmtype modified to %ld ",request.sequence_number);
-    printf("mytpe : %ld", result.mtype);
-    fflush(stdout);
-    // Send the message to the message queue.
+
+    // printf("mytpe : %ld",result.mtype);
+    // fflush(stdout);
+    //  Send the message to the message queue.
     if (msgsnd(msgid, &result, sizeof(result), 0) == -1)
     {
         fprintf(stderr, "\nError in msgsnd");
@@ -255,11 +241,11 @@ int main()
     {
         if (flag)
         {
-            printf("Secondary Server 2 is Listening!!");
+            printf("Secondary Server 2 is Listening!!\n");
         }
         else
         {
-            printf("Secondary Server 1 is Listening!!");
+            printf("Secondary Server 1 is Listening!!\n");
         }
         fflush(stdout);
 
@@ -519,12 +505,6 @@ void q_initializer(Queue *q, char start_vertex, int no_of_vertices, char **adj_m
     q->cur_vertex = malloc(sizeof(char));
     *(q->cur_vertex) = start_vertex;
 
-    // q->arr = malloc(no_of_vertices * sizeof(char *));
-    // for (int i = 0; i < no_of_vertices; i++)
-    // {
-    //     (q->arr)[i] = malloc(no_of_vertices * sizeof(char));
-    // }
-
     q->thread = malloc(no_of_vertices * sizeof(pthread_t *));
 
     q->arr_ptr = 0;
@@ -573,8 +553,7 @@ void *add_bfs(void *arg)
     int current_vertex = (int)(*(q->cur_vertex) - '0');
     pthread_mutex_unlock(&queueMutex);
     // printf("add cur is: %d   ", current_vertex);
-    // fflush(stdout);
-    //  printf("\n\n");
+
     for (int i = 0; i < q->num_vertices; i++)
     {
         if (q->adjacencyMatrix[current_vertex - 1][i] == '1' && !q->visited[i])

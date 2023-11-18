@@ -79,7 +79,8 @@ int main()
     }
 
     int flag;
-    printf("Enter Secondary Server number:\n1-> Start Secondary Server 1\n2-> Start Secondary Server 2");
+    printf("Enter Secondary Server number:\n1-> Start Secondary Server 1\n2-> Start Secondary Server 2\n");
+    printf("Enter choice: ");
     scanf("%d", &flag);
     flag--;
 

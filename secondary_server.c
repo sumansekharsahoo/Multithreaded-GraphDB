@@ -45,15 +45,15 @@ typedef struct Result_t
 
 void *bfs(void *argument)
 {
-    printf("BFS Function")
-        LBRequest lbRequest = *((LBRequest *)argument);
+    printf("BFS Function");
+    LBRequest lbRequest = *((LBRequest *)argument);
     // printf("")
 }
 
 void *dfs(void *argument)
 {
-    printf("DFS Function")
-        LBRequest lbRequest = *((LBRequest *)argument);
+    printf("DFS Function");
+    LBRequest lbRequest = *((LBRequest *)argument);
     // printf("")
 }
 
